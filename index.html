@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<title>Granny Escape 2D</title>
+
+<style>
+
+* {
+
+  box-sizing: border-box;
+
+  -webkit-user-select: none;
+
+  user-select: none;
+
+}
+
+html, body {
+
+  margin: 0;
+
+  padding: 0;
+
+  width: 100%;
+
+  height: 100%;
+
+  overflow: hidden;
+
+  background: #111;
+
+  touch-action: none;
+
+  font-family: Arial, sans-serif;
+
+}
+
+#game {
+
+  position: fixed;
+
+  inset: 0;
+
+  overflow: hidden;
+
+  background: #222;
+
+}
+
+#world {
+
+  position: absolute;
+
+  width: 2400px;
+
+  height: 1600px;
+
+  background:
+
+    linear-gradient(90deg, rgba(0,0,0,.08) 1px, transparent 1px),
+
+    linear-gradient(rgba(0,0,0,.08) 1px, transparent 1px),
+
+    #81745f;
+
+  background-size: 50px 50px;
+
+}
+
+.room {
+
+  position: absolute;
+
+  border: 8px solid #493d31;
+
+  background: #9c8d73;
+
+}
+
+#room1 { left:80px; top:80px; width:700px; height:500px; }
+
+#room2 { left:850px; top:80px; width:700px; height:500px; }
+
+#room3 { left:80px; top:700px; width:700px; height:500px; }
+
+#room4 { left:850px; top:700px; width:700px; height:500px; }
+
+.door {
+
+  position:absolute;
+
+  width:80px;
+
+  height:18px;
+
+  background:#4b2919;
+
+}
+
+.bed {
+
+  position:absolute;
+
+  width:180px;
+
+  height:90px;
+
+  background:#5c7180;
+
+  border:6px solid #392e27;
+
+  border-radius:8px;
+
+}
+
+.drawer {
+
+  position:absolute;
+
+  width:70px;
+
+  height:100px;
+
+  background:#573722;
+
+  border:5px solid #382218;
+
+}
+
+.player {
+
+  position:absolute;
+
+  width:38px;
+
+  height:38px;
+
+  border-radius:50%;
+
+  background:#2878d8;
+
+  border:4px solid white;
+
+  z-index:20;
+
+}
+
+.granny {
+
+  position:absolute;
+
+  width:44px;
+
+  height:44px;
+
+  border-radius:50%;
+
+  background:#ddd;
+
+  border:5px solid #7b2222;
+
+  z-index:19;
+
+}
+
+#hud {
+
+  position:fixed;
+
+  top:12px;
+
+  left:12px;
+
+  z-index:50;
+
+  color:white;
+
+  background:rgba(0,0,0,.65);
+
+  padding:10px 14px;
+
+  border-radius:10px;
+
+  font-size:16px;
+
+}
+
+#message {
+
+  position:fixed;
+
+  top:65px;
+
+  left:50%;
+
+  transform:translateX(-50%);
+
+  z-index:60;
+
+  color:white;
+
+  background:rgba(0,0,0,.75);
+
+  padding:10px 16px;
+
+  border-radius:10px;
+
+  display:none;
+
+}
+
+#controls {
+
+  position:fixed;
+
+  left:20px;
+
+  bottom:25px;
+
+  width:190px;
+
+  height:150px;
+
+  z-index:100;
+
+}
+
+.btn {
+
+  position:absolute;
+
+  width:60px;
+
+  height:60px;
+
+  border-radius:18px;
+
+  border:2px solid white;
+
+  background:rgba(0,0,0,.6);
+
+  color:white;
+
+  font-size:25px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+}
+
+#up { left:65px; top:0; }
+
+#left { left:0; top:65px; }
+
+#down { left:65px; top:65px; }
+
+#right { left:130px; top:65px; }
+
+#actions {
+
+  position:fixed;
+
+  right:20px;
+
+  bottom:30px;
+
+  z-index:100;
+
+  display:flex;
+
+  gap:12px;
+
+}
+
+.action {
+
+  width:70px;
+
+  height:70px;
+
+  border-radius:50%;
+
+  border:2px solid white;
+
+  background:rgba(0,0,0,.65);
+
+  color:white;
+
+  font-size:13px;
+
+}
+
+#inventory {
+
+  position:fixed;
+
+  right:15px;
+
+  top:15px;
+
+  z-index:100;
+
+  width:100px;
+
+  height:55px;
+
+  border:2px solid white;
+
+  border-radius:10px;
+
+  background:rgba(0,0,0,.65);
+
+  color:white;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  font-size:12px;
+
+  text-align:center;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="game">
+
+  <div id="world">
+
+    <div id="room1" class="room">
+
+      <div class="bed" style="left:100px;top:100px;"></div>
+
+      <div class="drawer" style="left:480px;top:80px;"></div>
+
+      <div class="drawer" style="left:570px;top:80px;"></div>
+
+    </div>
+
+    <div id="room2" class="room">
+
+      <div class="bed" style="left:120px;top:100px;"></div>
+
+      <div class="drawer" style="left:480px;top:90px;"></div>
+
+      <div class="drawer" style="left:570px;top:90px;"></div>
+
+    </div>
+
+    <div id="room3" class="room">
+
+      <div class="bed" style="left:100px;top:100px;"></div>
+
+      <div class="drawer" style="left:480px;top:100px;"></div>
+
+    </div>
+
+    <div id="room4" class="room">
+
+      <div class="bed" style="left:120px;top:100px;"></div>
+
+      <div class="drawer" style="left:500px;top:100px;"></div>
+
+    </div>
+
+    <div id="player" class="player"></div>
+
+    <div id="granny" class="granny"></div>
+
+  </div>
+
+</div>
+
+<div id="hud">
+
+  Gece: <span id="day">1</span>/5
+
+</div>
+
+<div id="inventory">
+
+  Envanter<br>
+
+  Boş
+
+</div>
+
+<div id="message"></div>
+
+<div id="controls">
+
+  <div class="btn" id="up">▲</div>
+
+  <div class="btn" id="left">◀</div>
+
+  <div class="btn" id="down">▼</div>
+
+  <div class="btn" id="right">▶</div>
+
+</div>
+
+<div id="actions">
+
+  <button class="action" id="take">AL</button>
+
+  <button class="action" id="drop">BIRAK</button>
+
+</div>
+
+<script>
+
+const player = document.getElementById("player");
+
+const granny = document.getElementById("granny");
+
+const world = document.getElementById("world");
+
+const inventory = document.getElementById("inventory");
+
+const message = document.getElementById("message");
+
+let px = 300;
+
+let py = 300;
+
+let gx = 1200;
+
+let gy = 300;
+
+let speed = 4;
+
+let keys = {};
+
+let item = null;
+
+const controls = {
+
+  up:false,
+
+  down:false,
+
+  left:false,
+
+  right:false
+
+};
+
+function showMessage(text) {
+
+  message.textContent = text;
+
+  message.style.display = "block";
+
+  setTimeout(() => {
+
+    message.style.display = "none";
+
+  }, 1500);
+
+}
+
+function updatePlayer() {
+
+  if (controls.up) py -= speed;
+
+  if (controls.down) py += speed;
+
+  if (controls.left) px -= speed;
+
+  if (controls.right) px += speed;
+
+  px = Math.max(20, Math.min(2350, px));
+
+  py = Math.max(20, Math.min(1550, py));
+
+  player.style.left = px + "px";
+
+  player.style.top = py + "px";
+
+}
+
+function updateGranny() {
+
+  const dx = px - gx;
+
+  const dy = py - gy;
+
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance < 420) {
+
+    gx += (dx / Math.max(distance,1)) * 1.8;
+
+    gy += (dy / Math.max(distance,1)) * 1.8;
+
+  }
+
+  granny.style.left = gx + "px";
+
+  granny.style.top = gy + "px";
+
+  if (distance < 45) {
+
+    showMessage("GRANNY SENİ YAKALADI!");
+
+    px = 300;
+
+    py = 300;
+
+    gx = 1200;
+
+    gy = 300;
+
+  }
+
+}
+
+function camera() {
+
+  const screenW = window.innerWidth;
+
+  const screenH = window.innerHeight;
+
+  let camX = px - screenW / 2;
+
+  let camY = py - screenH / 2;
+
+  camX = Math.max(0, Math.min(2400 - screenW, camX));
+
+  camY = Math.max(0, Math.min(1600 - screenH, camY));
+
+  world.style.transform =
+
+    `translate(${-camX}px, ${-camY}px)`;
+
+}
+
+function gameLoop() {
+
+  updatePlayer();
+
+  updateGranny();
+
+  camera();
+
+  requestAnimationFrame(gameLoop);
+
+}
+
+function button(id, direction) {
+
+  const el = document.getElementById(id);
+
+  el.addEventListener("touchstart", e => {
+
+    e.preventDefault();
+
+    controls[direction] = true;
+
+  });
+
+  el.addEventListener("touchend", e => {
+
+    e.preventDefault();
+
+    controls[direction] = false;
+
+  });
+
+  el.addEventListener("touchcancel", () => {
+
+    controls[direction] = false;
+
+  });
+
+  el.addEventListener("mousedown", () => {
+
+    controls[direction] = true;
+
+  });
+
+  el.addEventListener("mouseup", () => {
+
+    controls[direction] = false;
+
+  });
+
+  el.addEventListener("mouseleave", () => {
+
+    controls[direction] = false;
+
+  });
+
+}
+
+button("up","up");
+
+button("down","down");
+
+button("left","left");
+
+button("right","right");
+
+document.getElementById("take").addEventListener("click", () => {
+
+  if (item === null) {
+
+    item = "Anahtar";
+
+    inventory.innerHTML = "Envanter<br>🔑 Anahtar";
+
+    showMessage("Anahtarı aldın!");
+
+  } else {
+
+    showMessage("Envanter dolu!");
+
+  }
+
+});
+
+document.getElementById("drop").addEventListener("click", () => {
+
+  if (item !== null) {
+
+    item = null;
+
+    inventory.innerHTML = "Envanter<br>Boş";
+
+    showMessage("Eşyayı bıraktın.");
+
+  }
+
+});
+
+gameLoop();
+
+</script>
+
+</body>
+
+</html>
